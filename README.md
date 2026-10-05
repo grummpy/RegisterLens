@@ -12,7 +12,7 @@ Educational offline analysis. Verify device documentation before using interpret
 
 ## Prerequisites
 
-- Node.js 22.12.x, 24.x, or 26+ (Node 23 and 25 are not supported by the locked test runner; developed on Node.js 24)
+- Node.js 22.13.x, 24.x, or 26+ (Node 22.12, 23, and 25 are not supported by every locked tool; developed on Node.js 24)
 - npm 10 or newer
 
 Browser tests need a one-time Chromium install:
