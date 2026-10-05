@@ -39,7 +39,7 @@ describe("evidence export", () => {
   });
 
   it("escapes hostile map text in Markdown", () => {
-    const hostile = "<script>alert(1)</script>";
+    const hostile = "<script>alert(1)</script>\n# Forged result | [link](https://example.test)";
     const map = {
       schemaVersion: 1,
       name: hostile,
@@ -69,8 +69,24 @@ describe("evidence export", () => {
       syntheticPresetLabel: null,
     });
     const markdown = renderMarkdown(buildEvidence(analysis, "2026-10-05T12:00:00.000Z"));
-    expect(markdown).not.toContain("<script>");
-    expect(markdown).toContain(escapeMarkdownText(hostile));
+    expect(markdown).toContain(`- Name: ${escapeMarkdownText(hostile)}`);
     expect(markdown).toContain("&lt;script&gt;");
+    expect(markdown).not.toContain("\n# Forged result");
+  });
+
+  it("uses a fence that imported original text cannot close", () => {
+    const hostileInput = "00 01\n~~~~~~~~\n# Forged section";
+    const analysis = analyzeExchange({
+      requestText: hostileInput,
+      responseText: HOLDING_TEMP_RESPONSE,
+      mapText: "",
+      captureTime: "",
+      provenanceNote: "",
+      syntheticPresetId: null,
+      syntheticPresetLabel: null,
+    });
+
+    const markdown = renderMarkdown(buildEvidence(analysis, "2026-10-05T12:00:00.000Z"));
+    expect(markdown).toContain("~~~~~~~~~\n00 01\n~~~~~~~~\n# Forged section\n~~~~~~~~~");
   });
 });
