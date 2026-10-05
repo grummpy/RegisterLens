@@ -7,11 +7,12 @@
     "dev": "vite --host 127.0.0.1 --port 5173 --strictPort",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1 --port 4173 --strictPort",
-    "test": "vitest",
+    "test": "npm run test:engines && vitest",
+    "test:engines": "node scripts/verify-node-engines.mjs",
     "test:e2e": "playwright test"
   },
   "engines": {
-    "node": ">=22.13.0"
+    "node": "^22.13.0 || ^24.0.0 || >=26.0.0"
   },
   "dependencies": {
     "react": "^19.3.0",
