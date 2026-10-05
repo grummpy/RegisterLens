@@ -12,7 +12,7 @@ Educational offline analysis. Verify device documentation before using interpret
 
 ## Prerequisites
 
-- Node.js 20 or newer (developed on Node.js 22)
+- Node.js 22.13 or newer (developed on Node.js 24)
 - npm 10 or newer
 
 Browser tests need a one-time Chromium install:

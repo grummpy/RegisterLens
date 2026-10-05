@@ -208,11 +208,17 @@ export function buildEvidence(result: AnalysisResult, generatedAt: string): Evid
 
 export function escapeMarkdownText(value: string): string {
   return value
+    // Inline and table fields must not create a new Markdown block. Preserve
+    // the fact that a line break occurred without allowing a heading/list.
+    .replace(/\r\n?|\n/g, " ↩ ")
+    .replace(/\\/g, "\\\\")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/\|/g, "\\|")
     .replace(/`/g, "\\`")
+    .replace(/~/g, "\\~")
+    .replace(/#/g, "\\#")
     .replace(/\*/g, "\\*")
     .replace(/_/g, "\\_")
     .replace(/\[/g, "\\[")
@@ -220,8 +226,11 @@ export function escapeMarkdownText(value: string): string {
 }
 
 function block(value: string): string {
-  const safe = escapeMarkdownText(value);
-  return ["~~~~text", safe, "~~~~"].join("\n");
+  // Code blocks retain original evidence text. Pick a fence longer than any
+  // run supplied in that text so it cannot close the block early.
+  const longestTildeRun = Math.max(0, ...Array.from(value.matchAll(/~+/g), (match) => match[0].length));
+  const fence = "~".repeat(Math.max(4, longestTildeRun + 1));
+  return [fence, value.replace(/\r\n?/g, "\n"), fence].join("\n");
 }
 
 function diagLines(diagnostics: readonly Diagnostic[]): string {
