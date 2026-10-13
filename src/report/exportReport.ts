@@ -99,6 +99,13 @@ interface ValueReport {
 
 const DIRECTION_NOTE = "Direction is user-assigned. It was not inferred from bytes.";
 
+function escapeInvisibleControls(value: string): string {
+  return value.replace(
+    /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F\u200E\u200F\u202A-\u202E\u2066-\u2069]/g,
+    (character) => `\\u${character.codePointAt(0)?.toString(16).toUpperCase().padStart(4, "0")}`,
+  );
+}
+
 function messageReport(message: MessageDecode | null): MessageReport | null {
   if (!message) {
     return null;
@@ -207,7 +214,7 @@ export function buildEvidence(result: AnalysisResult, generatedAt: string): Evid
 }
 
 export function escapeMarkdownText(value: string): string {
-  return value
+  const escaped = value
     // Inline and table fields must not create a new Markdown block. Preserve
     // the fact that a line break occurred without allowing a heading/list.
     .replace(/\r\n?|\n/g, " ↩ ")
@@ -223,6 +230,11 @@ export function escapeMarkdownText(value: string): string {
     .replace(/_/g, "\\_")
     .replace(/\[/g, "\\[")
     .replace(/\]/g, "\\]");
+  // Keep untrusted text from using invisible directional or control
+  // characters to make a rendered report appear to say something other
+  // than its serialized evidence. The JSON export retains the original
+  // value; this is only the display-safe Markdown representation.
+  return escapeInvisibleControls(escaped);
 }
 
 function block(value: string): string {
@@ -230,7 +242,7 @@ function block(value: string): string {
   // run supplied in that text so it cannot close the block early.
   const longestTildeRun = Math.max(0, ...Array.from(value.matchAll(/~+/g), (match) => match[0].length));
   const fence = "~".repeat(Math.max(4, longestTildeRun + 1));
-  return [fence, value.replace(/\r\n?/g, "\n"), fence].join("\n");
+  return [fence, escapeInvisibleControls(value.replace(/\r\n?/g, "\n")), fence].join("\n");
 }
 
 function diagLines(diagnostics: readonly Diagnostic[]): string {
