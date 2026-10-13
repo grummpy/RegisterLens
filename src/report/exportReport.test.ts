@@ -89,4 +89,35 @@ describe("evidence export", () => {
     const markdown = renderMarkdown(buildEvidence(analysis, "2026-10-05T12:00:00.000Z"));
     expect(markdown).toContain("~~~~~~~~~\n00 01\n~~~~~~~~\n# Forged section\n~~~~~~~~~");
   });
+
+  it("renders invisible control characters safely without changing JSON evidence", () => {
+    const hostile = "Demo \u202Evalue\u0007";
+    const map = {
+      schemaVersion: 1,
+      name: hostile,
+      mapVersion: "1.0.0",
+      source: "Invented demonstration data; no real equipment",
+      entries: [],
+    };
+    const analysis = analyzeExchange({
+      requestText: `00 01\n${hostile}`,
+      responseText: "",
+      mapText: JSON.stringify(map),
+      captureTime: "",
+      provenanceNote: hostile,
+      syntheticPresetId: null,
+      syntheticPresetLabel: null,
+    });
+    const report = buildEvidence(analysis, "2026-10-05T12:00:00.000Z");
+
+    const markdown = renderMarkdown(report);
+    expect(markdown).toContain("Demo \\u202Evalue\\u0007");
+    expect(markdown).not.toContain("\u202E");
+    expect(markdown).not.toContain("\u0007");
+
+    const restored = JSON.parse(evidenceJson(report)) as typeof report;
+    expect(restored.map?.name).toBe(hostile);
+    expect(restored.provenance.userNote).toBe(hostile);
+    expect(restored.request?.originalText).toBe(`00 01\n${hostile}`);
+  });
 });
